@@ -1608,10 +1608,15 @@ buildXCFramework()
         fi
     fi
     if [[ -n $BUILD_MAC_CATALYST ]]; then
-        for LIBPATH in "$MAC_CATALYST_OUTPUT_DIR"/build/*/libboost.a; do
-            LIB_ARGS+=('-library' "$LIBPATH")
-            SLICES_COUNT=$((SLICES_COUNT + 1))
+        echo "Re-lipo Mac-Catalyst Device libs"
+        ARCH_FILES=()
+        for ARCH in "${MAC_CATALYST_ARCHS[@]}"; do
+            ARCH_FILES+=("$MAC_CATALYST_BUILD_DIR/$ARCH/libboost.a")
         done
+
+        $MAC_CATALYST_DEV_CMD lipo -create "${ARCH_FILES[@]}" -o "$MAC_CATALYST_BUILD_DIR/libboost.a" || abort "Mac-Catalyst Device Lipo failed"
+		LIB_ARGS+=('-library' "$MAC_CATALYST_BUILD_DIR/libboost.a")
+        SLICES_COUNT=$((SLICES_COUNT + 1))
 
         INCLUDE_DIR="$MAC_CATALYST_OUTPUT_DIR/prefix/include"
         if [ -d "$INCLUDE_DIR" ]; then
